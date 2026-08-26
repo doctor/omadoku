@@ -1,0 +1,20 @@
+{
+  "schemaVersion": 1,
+  "id": "doctor.omadoku",
+  "name": "Omadoku",
+  "version": "0.1.0",
+  "author": "doctor",
+  "description": "A fast, offline Sudoku game for Omarchy Shell",
+  "kinds": ["overlay", "bar-widget"],
+  "keepLoaded": true,
+  "entryPoints": {
+    "overlay": "Omadoku.qml",
+    "barWidget": "BarWidget.qml"
+  },
+  "barWidget": {
+    "displayName": "Omadoku",
+    "description": "Open the Omadoku Sudoku game",
+    "category": "Entertainment",
+    "allowMultiple": false
+  }
+}
