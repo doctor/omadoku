@@ -54,7 +54,7 @@ Item {
     difficulty = game.difficulty; puzzle = game.puzzle.slice(); solution = game.solution.slice()
     entries = game.entries.slice(); notes = game.notes.slice(); elapsed = Number(game.elapsed) || 0
     mistakes = Number(game.mistakes) || 0; undoStack = (game.undo || []).slice(); redoStack = (game.redo || []).slice()
-    paused = false; won = false; boardRepeater.model = 0; boardRepeater.model = 81
+    paused = false; won = false
   }
   function newGame(level, abandon) {
     if (abandon && appState.game && !won) Sudoku.recordAbandon(appState, difficulty)
@@ -66,7 +66,7 @@ Item {
     paused = false; won = false; confirmNew = false; showStats = false
     Sudoku.recordStart(appState, level)
     appState.game = { difficulty: level }
-    boardRepeater.model = 0; boardRepeater.model = 81; save()
+    save()
   }
   function open(payloadJson) {
     opened = true; paused = false; confirmNew = false
@@ -81,7 +81,7 @@ Item {
   function selectCell(index) { selected = Math.max(0, Math.min(80, index)); keys.forceActiveFocus() }
   function applySnapshot(snapshot) {
     entries = snapshot.entries.slice(); notes = snapshot.notes.slice(); mistakes = snapshot.mistakes
-    boardRepeater.model = 0; boardRepeater.model = 81; save()
+    save()
   }
   function snapshot() { return { entries: entries.slice(), notes: notes.slice(), mistakes: mistakes } }
   function enter(number) {
@@ -95,7 +95,6 @@ Item {
       if (number && number !== solution[selected]) mistakes++
     }
     entries = nextEntries; notes = nextNotes
-    boardRepeater.model = 0; boardRepeater.model = 81
     if (entries.every(function(v, i) { return puzzle[i] || v === solution[i] })) finishGame()
     else save()
   }
