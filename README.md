@@ -7,6 +7,8 @@ undo/redo, timer, mistakes, and persistent core statistics.
 ## Install
 
 Requires Omarchy 4 or newer with Omarchy Shell enabled.
+There are no external runtime dependencies beyond the Quickshell environment
+included with Omarchy.
 
 ```bash
 omarchy plugin add https://github.com/doctor/omadoku.git --enable --yes
