@@ -49,6 +49,7 @@ Item {
     stateReady = true
     if (appState.game) restoreGame(appState.game)
     else newGame("Medium", false)
+    if (opened) focusTimer.restart()
   }
   function restoreGame(game) {
     difficulty = game.difficulty; puzzle = game.puzzle.slice(); solution = game.solution.slice()
@@ -70,7 +71,7 @@ Item {
   }
   function open(payloadJson) {
     opened = true; paused = false; confirmNew = false
-    Qt.callLater(function() { keys.forceActiveFocus() })
+    focusTimer.restart()
   }
   function close() { opened = false; paused = true; save() }
   function dismiss() {
@@ -133,6 +134,7 @@ Item {
     onLoadFailed: root.load("")
   }
   Timer { interval: 1000; repeat: true; running: root.opened && !root.paused && !root.won; onTriggered: { root.elapsed++; if (root.elapsed % 10 === 0) root.save() } }
+  Timer { id: focusTimer; interval: 120; repeat: false; onTriggered: keys.forceActiveFocus() }
 
   PanelWindow {
     id: panel
@@ -143,14 +145,15 @@ Item {
     WlrLayershell.layer: WlrLayer.Overlay
     WlrLayershell.keyboardFocus: WlrKeyboardFocus.Exclusive
     exclusionMode: ExclusionMode.Ignore
+    onVisibleChanged: if (visible) focusTimer.restart()
 
     Rectangle { anchors.fill: parent; color: Color.menu.scrim }
     MouseArea { anchors.fill: parent; onClicked: root.dismiss() }
 
     BorderSurface {
       id: card
-      width: Math.min(Style.space(880), panel.width - Style.gapsOut * 2)
-      height: Math.min(Style.space(700), panel.height - Style.gapsOut * 2)
+      width: Math.min(Style.space(1120), panel.width - Style.gapsOut * 4)
+      height: Math.min(Style.space(780), panel.height - Style.gapsOut * 4)
       anchors.centerIn: parent
       color: Color.menu.background
       radius: Style.cornerRadius
@@ -177,18 +180,63 @@ Item {
           else if (event.key === Qt.Key_0 || event.key === Qt.Key_Backspace || event.key === Qt.Key_Delete) { root.enter(0); event.accepted = true }
         }
 
-        Text { id: title; text: "OMADOKU"; color: Color.menu.text; font.family: Style.font.menuFamily; font.pixelSize: Style.font.title; font.bold: true }
-        Text { anchors.right: parent.right; text: root.timeText(root.elapsed) + "   •   " + root.difficulty + "   •   " + root.mistakes + " mistakes"; color: Color.menu.text; font.family: Style.font.menuFamily; font.pixelSize: Style.font.body }
+        Row {
+          id: brand
+          anchors.left: parent.left
+          anchors.verticalCenter: title.verticalCenter
+          spacing: Style.spacing.md
+          Text { text: "▦"; color: Color.accent; font.family: Style.font.menuFamily; font.pixelSize: Style.font.heading }
+          Text { text: "OMADOKU"; color: Color.menu.text; font.family: Style.font.menuFamily; font.pixelSize: Style.font.caption; font.bold: true; font.letterSpacing: 2 }
+        }
+        Text { id: title; anchors.horizontalCenter: parent.horizontalCenter; text: root.difficulty.toUpperCase(); color: Color.menu.text; font.family: Style.font.menuFamily; font.pixelSize: Style.font.title; font.bold: true; font.letterSpacing: 1.4 }
+        Text { anchors.right: parent.right; anchors.verticalCenter: title.verticalCenter; text: root.timeText(root.elapsed); color: Color.menu.text; font.family: Style.font.menuFamily; font.pixelSize: Style.font.title; font.bold: true }
 
         Item {
           id: content
           anchors { top: title.bottom; topMargin: Style.spacing.lg; left: parent.left; right: parent.right; bottom: parent.bottom }
-          property real boardSize: Math.min(height, width * 0.67)
-          Rectangle {
+          property real boardSize: Math.min(height - Style.space(34), width - Style.space(470), Style.space(620))
+
+          Column {
+            id: infoRail
+            width: Style.space(180)
+            anchors.right: board.left
+            anchors.rightMargin: Style.space(28)
+            anchors.verticalCenter: board.verticalCenter
+            spacing: Style.spacing.xl
+
+            PanelSectionHeader { text: "GAME"; foreground: Color.menu.text; fontFamily: Style.font.menuFamily }
+            StatLine { label: "DIFFICULTY"; value: root.difficulty }
+            StatLine { label: "TIME"; value: root.timeText(root.elapsed) }
+            StatLine { label: "MISTAKES"; value: String(root.mistakes) }
+            PanelSeparator { foreground: Color.menu.text }
+            Text {
+              width: parent.width
+              text: "Fill every row, column, and 3×3 box with 1–9."
+              color: Qt.darker(Color.menu.text, 1.35)
+              font.family: Style.font.menuFamily
+              font.pixelSize: Style.font.bodySmall
+              wrapMode: Text.WordWrap
+              lineHeight: 1.25
+            }
+            Text {
+              width: parent.width
+              text: "ARROWS / HJKL  MOVE\nN  NOTES   P  PAUSE\nESC  SAVE & CLOSE"
+              color: Qt.darker(Color.menu.text, 1.5)
+              font.family: Style.font.menuFamily
+              font.pixelSize: Style.font.caption
+              font.bold: true
+              lineHeight: 1.35
+            }
+          }
+
+          BorderSurface {
             id: board
             width: content.boardSize; height: width
-            color: Color.menu.background
-            border.color: Color.menu.border; border.width: 2
+            anchors.centerIn: parent
+            color: Style.normalFillFor(Color.menu.text, Color.accent)
+            radius: Math.max(0, Style.cornerRadius - Style.space(2))
+            borderSpec: Border.flat(Color.menu.border, Style.space(2))
+            clip: true
 
             Grid {
               anchors.fill: parent; columns: 9; rows: 9
@@ -204,58 +252,67 @@ Item {
                   property bool related: row === Math.floor(root.selected / 9) || col === root.selected % 9 ||
                     (Math.floor(row / 3) === Math.floor(Math.floor(root.selected / 9) / 3) && Math.floor(col / 3) === Math.floor((root.selected % 9) / 3))
                   width: board.width / 9; height: board.height / 9
-                  color: index === root.selected ? Color.menu.selectedBackground : (related ? Qt.rgba(Color.menu.selectedBackground.r, Color.menu.selectedBackground.g, Color.menu.selectedBackground.b, 0.35) : Color.menu.background)
-                  border.color: Color.menu.border
-                  border.width: (col % 3 === 0 || row % 3 === 0) ? 1.5 : 0.5
+                  color: index === root.selected ? Style.selectedFillFor(Color.menu.text, Color.accent) : (related ? Style.hoverFillFor(Color.menu.text, Color.accent) : "transparent")
+                  border.color: Qt.rgba(Color.menu.text.r, Color.menu.text.g, Color.menu.text.b, 0.13)
+                  border.width: Style.spacing.hairline
                   Text {
                     anchors.centerIn: parent
                     visible: parent.value > 0 && !root.paused
                     text: parent.value
-                    color: root.puzzle[index] ? Color.menu.text : (parent.value !== root.solution[index] ? "#ff5f5f" : Color.menu.selectedText)
-                    font.family: Style.font.menuFamily; font.pixelSize: Math.max(16, parent.width * 0.42); font.bold: root.puzzle[index] > 0
+                    color: root.puzzle[index] ? Color.menu.text : (parent.value !== root.solution[index] ? Color.urgent : Color.accent)
+                    font.family: Style.font.menuFamily; font.pixelSize: Math.max(Style.font.heading, parent.width * 0.40); font.bold: root.puzzle[index] > 0
                   }
                   Grid {
                     visible: !parent.value && !root.paused
                     anchors.fill: parent; columns: 3; rows: 3
-                    Repeater { model: 9; Text { required property int index; width: parent.width / 3; height: parent.height / 3; text: (root.notes[cell.index] & (1 << (index + 1))) ? String(index + 1) : ""; color: Color.menu.text; opacity: 0.75; horizontalAlignment: Text.AlignHCenter; verticalAlignment: Text.AlignVCenter; font.pixelSize: Math.max(7, width * 0.45) } }
+                    Repeater { model: 9; Text { required property int index; width: parent.width / 3; height: parent.height / 3; text: (root.notes[cell.index] & (1 << (index + 1))) ? String(index + 1) : ""; color: Color.menu.text; opacity: 0.62; horizontalAlignment: Text.AlignHCenter; verticalAlignment: Text.AlignVCenter; font.family: Style.font.menuFamily; font.pixelSize: Math.max(Style.font.caption, width * 0.42) } }
                   }
                   MouseArea { anchors.fill: parent; onClicked: root.selectCell(index) }
                 }
               }
+            }
+            Repeater {
+              model: [1, 2]
+              Rectangle { required property var modelData; x: Math.round(board.width * modelData / 3) - width / 2; width: Style.space(2); height: board.height; color: Color.menu.border }
+            }
+            Repeater {
+              model: [1, 2]
+              Rectangle { required property var modelData; y: Math.round(board.height * modelData / 3) - height / 2; height: Style.space(2); width: board.width; color: Color.menu.border }
             }
             Rectangle { visible: root.paused && !root.won; anchors.fill: parent; color: Color.menu.background; opacity: 0.96; Text { anchors.centerIn: parent; text: "PAUSED\nPress P to continue"; horizontalAlignment: Text.AlignHCenter; color: Color.menu.text; font.pixelSize: Style.font.title } }
             Rectangle { visible: root.won; anchors.fill: parent; color: Color.menu.background; opacity: 0.96; Text { anchors.centerIn: parent; text: "SOLVED!\n" + root.timeText(root.elapsed) + "  •  " + root.mistakes + " mistakes"; horizontalAlignment: Text.AlignHCenter; color: Color.menu.selectedText; font.pixelSize: Style.font.title } }
           }
 
           Column {
-            anchors { left: board.right; leftMargin: Style.spacing.xl; right: parent.right; top: parent.top }
+            id: actionRail
+            width: Style.space(180)
+            anchors.left: board.right
+            anchors.leftMargin: Style.space(28)
+            anchors.verticalCenter: board.verticalCenter
             spacing: Style.spacing.md
-            Text { text: root.notesMode ? "NOTES ON" : "NUMBER MODE"; color: root.notesMode ? Color.menu.selectedText : Color.menu.text; font.bold: true; font.pixelSize: Style.font.body }
+            PanelSectionHeader { text: root.notesMode ? "NOTES MODE" : "NUMBER MODE"; foreground: Color.menu.text; fontFamily: Style.font.menuFamily }
             Grid {
-              columns: 3; spacing: Style.spacing.sm
-              Repeater { model: 9; Rectangle { required property int index; width: Style.space(54); height: width; radius: Style.cornerRadius; color: numberMouse.containsMouse ? Color.menu.selectedBackground : Color.menu.background; border.color: Color.menu.border; Text { anchors.centerIn: parent; text: index + 1; color: Color.menu.text; font.pixelSize: Style.font.title } MouseArea { id: numberMouse; anchors.fill: parent; hoverEnabled: true; onClicked: root.enter(index + 1) } } }
+              columns: 3; spacing: Style.spacing.md
+              Repeater { model: 9; Button { required property int index; width: Style.space(52); height: width; text: String(index + 1); bordered: true; foreground: Color.menu.text; accent: Color.accent; fontFamily: Style.font.menuFamily; fontSize: Style.font.title; onClicked: root.enter(index + 1) } }
             }
-            ActionButton { label: root.notesMode ? "Notes: on" : "Notes: off"; onClicked: root.notesMode = !root.notesMode }
-            ActionButton { label: root.paused ? "Resume" : "Pause"; onClicked: root.paused = !root.paused }
-            ActionButton { label: "Undo / Redo"; onClicked: root.undo() }
-            ActionButton { label: root.showStats ? "Hide stats" : "Statistics"; onClicked: root.showStats = !root.showStats }
-            ActionButton { label: "New game"; urgent: true; onClicked: root.confirmNew = true }
+            Button { width: parent.width; text: root.notesMode ? "Notes on" : "Notes off"; iconText: "󰏪"; bordered: true; selected: root.notesMode; foreground: Color.menu.text; accent: Color.accent; fontFamily: Style.font.menuFamily; onClicked: root.notesMode = !root.notesMode }
+            Row { spacing: Style.spacing.md; Button { width: (actionRail.width - parent.spacing) / 2; text: root.paused ? "Play" : "Pause"; bordered: true; foreground: Color.menu.text; fontFamily: Style.font.menuFamily; onClicked: root.paused = !root.paused } Button { width: (actionRail.width - parent.spacing) / 2; text: "Undo"; bordered: true; foreground: Color.menu.text; fontFamily: Style.font.menuFamily; onClicked: root.undo() } }
+            Button { width: parent.width; text: root.showStats ? "Hide statistics" : "Statistics"; iconText: "󰄬"; bordered: true; selected: root.showStats; foreground: Color.menu.text; accent: Color.accent; fontFamily: Style.font.menuFamily; onClicked: root.showStats = !root.showStats }
+            Button { width: parent.width; text: "New game"; iconText: "󰑐"; bordered: true; foreground: Color.urgent; accent: Color.urgent; fontFamily: Style.font.menuFamily; onClicked: root.confirmNew = true }
             Text { visible: root.showStats; width: parent.width; wrapMode: Text.WordWrap; text: "ALL GAMES\n" + root.statText(root.appState.stats.global) + "\n\n" + root.difficulty.toUpperCase() + "\n" + root.statText(root.appState.stats.byDifficulty[root.difficulty]); color: Color.menu.text; font.pixelSize: Style.font.bodySmall; lineHeight: 1.25 }
-            Column { visible: root.confirmNew; spacing: Style.spacing.sm; Text { text: "Replace this game?"; color: Color.menu.text; font.bold: true } Row { spacing: Style.spacing.sm; Repeater { model: ["Easy", "Medium", "Hard", "Expert"]; Rectangle { required property var modelData; width: Style.space(72); height: Style.space(34); radius: Style.cornerRadius; color: Color.menu.selectedBackground; Text { anchors.centerIn: parent; text: modelData; color: Color.menu.selectedText; font.pixelSize: Style.font.bodySmall } MouseArea { anchors.fill: parent; onClicked: root.newGame(modelData, true) } } } } }
+            Column { visible: root.confirmNew; spacing: Style.spacing.sm; PanelSectionHeader { text: "CHOOSE DIFFICULTY"; foreground: Color.menu.text; fontFamily: Style.font.menuFamily } Repeater { model: ["Easy", "Medium", "Hard", "Expert"]; Button { required property var modelData; width: actionRail.width; text: modelData; bordered: true; foreground: Color.menu.text; accent: Color.accent; fontFamily: Style.font.menuFamily; onClicked: root.newGame(modelData, true) } } }
           }
         }
       }
     }
   }
 
-  component ActionButton: Rectangle {
+  component StatLine: Column {
     property string label: ""
-    property bool urgent: false
-    signal clicked()
-    width: Style.space(180); height: Style.space(36); radius: Style.cornerRadius
-    color: actionMouse.containsMouse ? Color.menu.selectedBackground : Color.menu.background
-    border.color: urgent ? "#ff5f5f" : Color.menu.border
-    Text { anchors.centerIn: parent; text: parent.label; color: Color.menu.text; font.pixelSize: Style.font.body }
-    MouseArea { id: actionMouse; anchors.fill: parent; hoverEnabled: true; onClicked: parent.clicked() }
+    property string value: ""
+    width: parent ? parent.width : implicitWidth
+    spacing: Style.spacing.xxs
+    Text { text: parent.label; color: Qt.darker(Color.menu.text, 1.5); font.family: Style.font.menuFamily; font.pixelSize: Style.font.caption; font.bold: true; font.letterSpacing: 1 }
+    Text { text: parent.value; color: Color.menu.text; font.family: Style.font.menuFamily; font.pixelSize: Style.font.heading; font.bold: true }
   }
 }
