@@ -9,15 +9,21 @@ undo/redo, timer, mistakes, and persistent core statistics.
 Requires Omarchy 4 or newer with Omarchy Shell enabled.
 
 ```bash
-git clone https://github.com/doctor/omadoku.git ~/Work/omadoku
-mkdir -p ~/.config/omarchy/plugins
-ln -s ~/Work/omadoku ~/.config/omarchy/plugins/doctor.omadoku
-omarchy-shell shell rescanPlugins
-omarchy plugin enable doctor.omadoku
+omarchy plugin add https://github.com/doctor/omadoku.git --enable --yes
 ```
 
 Add `doctor.omadoku` to a bar section using Omarchy's bar configuration. Click
 the `▦` icon to open it.
+
+## Remove
+
+```bash
+omarchy plugin remove doctor.omadoku --yes
+```
+
+Omadoku leaves saved games and statistics in your state directory. To remove
+those too, delete `$XDG_STATE_HOME/omadoku.json` or
+`~/.local/state/omadoku.json` when `XDG_STATE_HOME` is unset.
 
 ## Controls
 

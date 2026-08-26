@@ -3,7 +3,7 @@
   "id": "doctor.omadoku",
   "name": "Omadoku",
   "version": "0.1.0",
-  "author": "doctor",
+  "author": "Doctor",
   "description": "A fast, offline Sudoku game for Omarchy Shell",
   "kinds": ["overlay", "bar-widget"],
   "keepLoaded": true,
