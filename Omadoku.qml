@@ -183,6 +183,7 @@ Item {
         Row {
           id: brand
           anchors.left: parent.left
+          anchors.leftMargin: Style.space(14)
           anchors.verticalCenter: title.verticalCenter
           spacing: Style.spacing.md
           height: title.implicitHeight
@@ -205,7 +206,7 @@ Item {
           }
         }
         Text { id: title; anchors.top: parent.top; anchors.topMargin: Style.spacing.lg; anchors.horizontalCenter: parent.horizontalCenter; text: root.difficulty.toUpperCase(); color: Color.menu.text; font.family: Style.font.menuFamily; font.pixelSize: Style.font.title; font.bold: true; font.letterSpacing: 1.4 }
-        Text { anchors.right: parent.right; anchors.verticalCenter: title.verticalCenter; text: root.timeText(root.elapsed) + "  ·  " + root.mistakes + " mistakes"; color: Color.menu.text; font.family: Style.font.menuFamily; font.pixelSize: Style.font.body; font.bold: true }
+        Text { anchors.right: parent.right; anchors.rightMargin: Style.space(14); anchors.verticalCenter: title.verticalCenter; text: root.timeText(root.elapsed) + "  ·  " + root.mistakes + " mistakes"; color: Color.menu.text; font.family: Style.font.menuFamily; font.pixelSize: Style.font.body; font.bold: true }
 
         Item {
           id: content
@@ -249,8 +250,8 @@ Item {
           BorderSurface {
             id: board
             width: content.boardSize; height: width
-            anchors.top: parent.top
             anchors.horizontalCenter: parent.horizontalCenter
+            y: Math.max(0, Math.floor((content.height - height - Style.spacing.lg - actionRail.implicitHeight) / 2))
             color: Style.normalFillFor(Color.menu.text, Color.accent)
             radius: Math.max(0, Style.cornerRadius - Style.space(2))
             borderSpec: Border.flat(Color.menu.border, Style.space(2))
