@@ -185,10 +185,26 @@ Item {
           anchors.left: parent.left
           anchors.verticalCenter: title.verticalCenter
           spacing: Style.spacing.md
-          Text { text: "▦"; color: Color.accent; font.family: Style.font.menuFamily; font.pixelSize: Style.font.heading }
-          Text { text: "OMADOKU"; color: Color.menu.text; font.family: Style.font.menuFamily; font.pixelSize: Style.font.caption; font.bold: true; font.letterSpacing: 2 }
+          height: title.implicitHeight
+          OpticalGlyph {
+            width: Style.font.heading
+            height: parent.height
+            text: "▦"
+            color: Color.accent
+            fontFamily: Style.font.menuFamily
+            fontSize: Style.font.heading
+          }
+          Text {
+            anchors.verticalCenter: parent.verticalCenter
+            text: "OMADOKU"
+            color: Color.menu.text
+            font.family: Style.font.menuFamily
+            font.pixelSize: Style.font.caption
+            font.bold: true
+            font.letterSpacing: 1.6
+          }
         }
-        Text { id: title; anchors.horizontalCenter: parent.horizontalCenter; text: root.difficulty.toUpperCase(); color: Color.menu.text; font.family: Style.font.menuFamily; font.pixelSize: Style.font.title; font.bold: true; font.letterSpacing: 1.4 }
+        Text { id: title; anchors.top: parent.top; anchors.topMargin: Style.spacing.lg; anchors.horizontalCenter: parent.horizontalCenter; text: root.difficulty.toUpperCase(); color: Color.menu.text; font.family: Style.font.menuFamily; font.pixelSize: Style.font.title; font.bold: true; font.letterSpacing: 1.4 }
         Text { anchors.right: parent.right; anchors.verticalCenter: title.verticalCenter; text: root.timeText(root.elapsed) + "  ·  " + root.mistakes + " mistakes"; color: Color.menu.text; font.family: Style.font.menuFamily; font.pixelSize: Style.font.body; font.bold: true }
 
         Item {
