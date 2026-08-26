@@ -152,8 +152,8 @@ Item {
 
     BorderSurface {
       id: card
-      width: Math.min(Style.space(1120), panel.width - Style.gapsOut * 4)
-      height: Math.min(Style.space(780), panel.height - Style.gapsOut * 4)
+      width: Math.min(Style.space(700), panel.width - Style.gapsOut * 4)
+      height: Math.min(Style.space(760), panel.height - Style.gapsOut * 4)
       anchors.centerIn: parent
       color: Color.menu.background
       radius: Style.cornerRadius
@@ -189,15 +189,16 @@ Item {
           Text { text: "OMADOKU"; color: Color.menu.text; font.family: Style.font.menuFamily; font.pixelSize: Style.font.caption; font.bold: true; font.letterSpacing: 2 }
         }
         Text { id: title; anchors.horizontalCenter: parent.horizontalCenter; text: root.difficulty.toUpperCase(); color: Color.menu.text; font.family: Style.font.menuFamily; font.pixelSize: Style.font.title; font.bold: true; font.letterSpacing: 1.4 }
-        Text { anchors.right: parent.right; anchors.verticalCenter: title.verticalCenter; text: root.timeText(root.elapsed); color: Color.menu.text; font.family: Style.font.menuFamily; font.pixelSize: Style.font.title; font.bold: true }
+        Text { anchors.right: parent.right; anchors.verticalCenter: title.verticalCenter; text: root.timeText(root.elapsed) + "  ·  " + root.mistakes + " mistakes"; color: Color.menu.text; font.family: Style.font.menuFamily; font.pixelSize: Style.font.body; font.bold: true }
 
         Item {
           id: content
           anchors { top: title.bottom; topMargin: Style.spacing.lg; left: parent.left; right: parent.right; bottom: parent.bottom }
-          property real boardSize: Math.min(height - Style.space(34), width - Style.space(470), Style.space(620))
+          property real boardSize: Math.min(height - Style.space(116), width - Style.space(24), Style.space(600))
 
           Column {
             id: infoRail
+            visible: false
             width: Style.space(180)
             anchors.right: board.left
             anchors.rightMargin: Style.space(28)
@@ -232,7 +233,8 @@ Item {
           BorderSurface {
             id: board
             width: content.boardSize; height: width
-            anchors.centerIn: parent
+            anchors.top: parent.top
+            anchors.horizontalCenter: parent.horizontalCenter
             color: Style.normalFillFor(Color.menu.text, Color.accent)
             radius: Math.max(0, Style.cornerRadius - Style.space(2))
             borderSpec: Border.flat(Color.menu.border, Style.space(2))
@@ -285,22 +287,27 @@ Item {
 
           Column {
             id: actionRail
-            width: Style.space(180)
-            anchors.left: board.right
-            anchors.leftMargin: Style.space(28)
-            anchors.verticalCenter: board.verticalCenter
+            width: board.width
+            anchors.top: board.bottom
+            anchors.topMargin: Style.spacing.lg
+            anchors.horizontalCenter: board.horizontalCenter
             spacing: Style.spacing.md
-            PanelSectionHeader { text: root.notesMode ? "NOTES MODE" : "NUMBER MODE"; foreground: Color.menu.text; fontFamily: Style.font.menuFamily }
             Grid {
-              columns: 3; spacing: Style.spacing.md
-              Repeater { model: 9; Button { required property int index; width: Style.space(52); height: width; text: String(index + 1); bordered: true; foreground: Color.menu.text; accent: Color.accent; fontFamily: Style.font.menuFamily; fontSize: Style.font.title; onClicked: root.enter(index + 1) } }
+              anchors.horizontalCenter: parent.horizontalCenter
+              columns: 9; spacing: Style.spacing.sm
+              Repeater { model: 9; Button { required property int index; width: Math.floor((actionRail.width - Style.spacing.sm * 8) / 9); height: Style.spacing.controlHeight; text: String(index + 1); bordered: true; foreground: Color.menu.text; accent: Color.accent; fontFamily: Style.font.menuFamily; fontSize: Style.font.body; onClicked: root.enter(index + 1) } }
             }
-            Button { width: parent.width; text: root.notesMode ? "Notes on" : "Notes off"; iconText: "󰏪"; bordered: true; selected: root.notesMode; foreground: Color.menu.text; accent: Color.accent; fontFamily: Style.font.menuFamily; onClicked: root.notesMode = !root.notesMode }
-            Row { spacing: Style.spacing.md; Button { width: (actionRail.width - parent.spacing) / 2; text: root.paused ? "Play" : "Pause"; bordered: true; foreground: Color.menu.text; fontFamily: Style.font.menuFamily; onClicked: root.paused = !root.paused } Button { width: (actionRail.width - parent.spacing) / 2; text: "Undo"; bordered: true; foreground: Color.menu.text; fontFamily: Style.font.menuFamily; onClicked: root.undo() } }
-            Button { width: parent.width; text: root.showStats ? "Hide statistics" : "Statistics"; iconText: "󰄬"; bordered: true; selected: root.showStats; foreground: Color.menu.text; accent: Color.accent; fontFamily: Style.font.menuFamily; onClicked: root.showStats = !root.showStats }
-            Button { width: parent.width; text: "New game"; iconText: "󰑐"; bordered: true; foreground: Color.urgent; accent: Color.urgent; fontFamily: Style.font.menuFamily; onClicked: root.confirmNew = true }
-            Text { visible: root.showStats; width: parent.width; wrapMode: Text.WordWrap; text: "ALL GAMES\n" + root.statText(root.appState.stats.global) + "\n\n" + root.difficulty.toUpperCase() + "\n" + root.statText(root.appState.stats.byDifficulty[root.difficulty]); color: Color.menu.text; font.pixelSize: Style.font.bodySmall; lineHeight: 1.25 }
-            Column { visible: root.confirmNew; spacing: Style.spacing.sm; PanelSectionHeader { text: "CHOOSE DIFFICULTY"; foreground: Color.menu.text; fontFamily: Style.font.menuFamily } Repeater { model: ["Easy", "Medium", "Hard", "Expert"]; Button { required property var modelData; width: actionRail.width; text: modelData; bordered: true; foreground: Color.menu.text; accent: Color.accent; fontFamily: Style.font.menuFamily; onClicked: root.newGame(modelData, true) } } }
+            Row {
+              anchors.horizontalCenter: parent.horizontalCenter
+              spacing: Style.spacing.sm
+              Button { text: root.notesMode ? "Notes on" : "Notes"; bordered: true; selected: root.notesMode; foreground: Color.menu.text; accent: Color.accent; fontFamily: Style.font.menuFamily; onClicked: root.notesMode = !root.notesMode }
+              Button { text: root.paused ? "Play" : "Pause"; bordered: true; foreground: Color.menu.text; fontFamily: Style.font.menuFamily; onClicked: root.paused = !root.paused }
+              Button { text: "Undo"; bordered: true; foreground: Color.menu.text; fontFamily: Style.font.menuFamily; onClicked: root.undo() }
+              Button { text: root.showStats ? "Hide stats" : "Stats"; bordered: true; selected: root.showStats; foreground: Color.menu.text; accent: Color.accent; fontFamily: Style.font.menuFamily; onClicked: root.showStats = !root.showStats }
+              Button { text: "New"; bordered: true; foreground: Color.urgent; accent: Color.urgent; fontFamily: Style.font.menuFamily; onClicked: root.confirmNew = true }
+            }
+            Text { visible: root.showStats; width: parent.width; horizontalAlignment: Text.AlignHCenter; wrapMode: Text.WordWrap; text: root.statText(root.appState.stats.global); color: Color.menu.text; font.family: Style.font.menuFamily; font.pixelSize: Style.font.bodySmall; lineHeight: 1.2 }
+            Row { visible: root.confirmNew; anchors.horizontalCenter: parent.horizontalCenter; spacing: Style.spacing.sm; Repeater { model: ["Easy", "Medium", "Hard", "Expert"]; Button { required property var modelData; text: modelData; bordered: true; foreground: Color.menu.text; accent: Color.accent; fontFamily: Style.font.menuFamily; onClicked: root.newGame(modelData, true) } } }
           }
         }
       }
