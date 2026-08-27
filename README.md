@@ -7,8 +7,8 @@ undo/redo, timer, mistakes, and persistent core statistics.
 ## Install
 
 Requires Omarchy 4 or newer with Omarchy Shell enabled.
-There are no external runtime dependencies beyond the Quickshell environment
-included with Omarchy.
+It uses the Quickshell and Python 3 runtimes included with Omarchy; Python is
+used only to safely load the small persistent state file.
 
 ```bash
 omarchy plugin add https://github.com/doctor/omadoku.git --enable --yes

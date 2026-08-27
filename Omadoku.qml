@@ -30,6 +30,7 @@ Item {
   readonly property string home: Quickshell.env("HOME")
   readonly property string stateBase: Quickshell.env("XDG_STATE_HOME") || (home + "/.local/state")
   readonly property string statePath: stateBase + "/omadoku.json"
+  readonly property string stateReader: decodeURIComponent(Qt.resolvedUrl("tools/read-state.py").toString().replace(/^file:\/\//, ""))
   property bool stateReady: false
 
   function copy(value) { return JSON.parse(JSON.stringify(value)) }
@@ -123,15 +124,31 @@ Item {
       "Best  " + (bucket.bestSeconds ? timeText(bucket.bestSeconds) : "—") + "     Average  " + (avg ? timeText(avg) : "—") + "     Mistakes  " + bucket.mistakes
   }
 
-  Component.onCompleted: Quickshell.execDetached(["mkdir", "-p", stateBase])
+  Process {
+    id: ensureStateDir
+    command: ["mkdir", "-p", root.stateBase]
+    onExited: safeStateReader.running = true
+  }
+
+  Process {
+    id: safeStateReader
+    command: ["python3", root.stateReader, root.statePath]
+    stdout: StdioCollector {
+      onStreamFinished: root.load(text)
+    }
+    onExited: function(exitCode) {
+      if (exitCode !== 0) root.load("")
+    }
+  }
+
+  Component.onCompleted: ensureStateDir.running = true
 
   FileView {
     id: stateFile
     path: root.statePath
+    preload: false
     atomicWrites: true
     printErrors: false
-    onLoaded: root.load(text())
-    onLoadFailed: root.load("")
   }
   Timer { interval: 1000; repeat: true; running: root.opened && !root.paused && !root.won; onTriggered: { root.elapsed++; if (root.elapsed % 10 === 0) root.save() } }
   Timer { id: focusTimer; interval: 120; repeat: false; onTriggered: keys.forceActiveFocus() }
