@@ -1,4 +1,5 @@
 import QtQuick
+import qs.Commons
 import qs.Ui
 
 BarWidget {
@@ -7,15 +8,16 @@ BarWidget {
   implicitWidth: button.implicitWidth
   implicitHeight: button.implicitHeight
 
-  WidgetButton {
+  BarIconButton {
     id: button
     anchors.fill: parent
     bar: root.bar
-    text: "▦"
-    tooltipText: "Omadoku"
-    horizontalMargin: 7.5
-    onPressed: function(button) {
-      if (root.bar) root.bar.run("omarchy-shell shell toggle doctor.omadoku '{}'")
+    text: "󰋁"
+    tooltipText: "Play Omadoku"
+
+    onPressed: function(mouseButton) {
+      if (!root.bar || mouseButton !== Qt.LeftButton) return
+      root.bar.run("omarchy-shell shell toggle doctor.omadoku '{}'")
     }
   }
 }
